@@ -4,7 +4,7 @@
 ![flux-frame](./docs/flux-frame.png)
 ## Init env
 
-- Flux
+- [Flux](https://fluxcd.io/docs/components/source/)
 
   ```
   # Install flux client
