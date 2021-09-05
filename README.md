@@ -47,4 +47,17 @@
   # Commit and push demo-source.yaml to flux base dir:
   git add -A && git commit -m "Add demo GitRepository"
   git push
+
+  # Export the manifest of demo deployment for flux
+  flux create kustomization demo \
+    --source=demo \
+    --path="./demo" \
+    --prune=true \
+    --validation=client \
+    --interval=5m \
+    --export > ./flux/demo-kustomization.yaml
+
+  # Commit and push demo-source.yaml to flux base dir:
+  git add -A && git commit -m "Add demo Kustomization"
+  git push
   ```
