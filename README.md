@@ -7,24 +7,23 @@
 - Flux
 
   ```
-  # Install fluxctl
-  brew install fluxctl
+  # Install flux client
+  brew install fluxcd/tap/flux
 
-  # Deploy flux
-  kubectl apply -f flux/
+  # Check k8s cluster
+  flux check --pre
 
-  # Set git config
-  fluxctl install \
-    --git-user=showerlee \
-    --git-email=showerlee@vip.qq.com \
-    --git-url=git@github.com:showerlee/istio-demo.git \
-    --namespace=flux | kubectl apply -f -
-  
-  # Get deploy key
-  fluxctl identity --k8s-fwd-ns flux
-  ssh-rsa xxxxxxxxx
+  # Export your credentials
+  export GITHUB_TOKEN=<your-token>
+  export GITHUB_USER=<your-username>
 
-  # Upload ssh-rsa to deploy key with write access in GIthub
+  # Setup Flux onto k8s cluster
+  flux bootstrap github \
+    --owner=$GITHUB_USER \
+    --repository=istio-demo \
+    --branch=main \
+    --path=./flux \
+    --personal
   ```
 
 - Demo
@@ -32,5 +31,9 @@
   ```
   # Create namespace for demo
   kubectl create ns demo
-  
+
+  # Commit demo manifests into repo so that flux could manage the deployment.
+  gaa
+  gcmsg "Add demo manifests"
+  gp
   ```
