@@ -36,4 +36,15 @@
   gaa
   gcmsg "Add demo manifests"
   gp
+
+  # Export the manifest of demo source git for flux
+  flux create source git demo \
+    --url=https://github.com/showerlee/istio-demo \
+    --branch=main \
+    --interval=30s \
+    --export > ./flux/demo-source.yaml
+  
+  # Commit and push demo-source.yaml to flux base dir:
+  git add -A && git commit -m "Add demo GitRepository"
+  git push
   ```
