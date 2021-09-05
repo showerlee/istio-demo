@@ -60,4 +60,28 @@
   # Commit and push demo-source.yaml to flux base dir:
   git add -A && git commit -m "Add demo Kustomization"
   git push
+
+  # Check all resources in demo namespace
+  kubectl get all -n demo
+  NAME                           READY   STATUS    RESTARTS   AGE
+  pod/httpbin-74fb669cc6-8kbzh   1/1     Running   0          9m1s
+  pod/sleep-854565cb79-2vdrl     1/1     Running   0          53m
+
+  NAME              TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+  service/httpbin   ClusterIP   10.101.24.23   <none>        8000/TCP   9m1s
+  service/sleep     ClusterIP   10.111.29.70   <none>        80/TCP     62m
+
+  NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+  deployment.apps/httpbin   1/1     1            1           9m1s
+  deployment.apps/sleep     1/1     1            1           53m
+
+  NAME                                 DESIRED   CURRENT   READY   AGE
+  replicaset.apps/httpbin-74fb669cc6   1         1         1       9m1s
+  replicaset.apps/sleep-854565cb79     1         1         1       53m
+
+  # Check the connection between sleep and httpbin
+  kubectl exec -it -n demo sleep-854565cb79-2vdrl -c sleep -- curl http://httpbin.demo:8000/ip
+  {
+    "origin": "10.1.1.71"
+  }
   ```
