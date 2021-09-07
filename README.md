@@ -122,7 +122,7 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   helm upgrade -i flagger flagger/flagger \
     --namespace=istio-system \
     --set crd.create=false \
-    --set slack.url=https://hooks.slack.com/services/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 \
+    --set slack.url=https://hooks.slack.com/services/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 \
     --set slack.channel=istio-demo \
     --set slack.user=Flagger
 
@@ -163,6 +163,31 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
 
   # Create canary analysis
   kubectl apply -f flagger/canary.yaml
+
+  # Simulate the request for httpbin
+  kubectl exec -it -n demo sleep-854565cb79-2vdrl -c sleep sh
+  while [ 1 ]; do curl http://httpbin.demo:8000/headers;sleep 2s; done
+  {
+    "headers": {
+      "Accept": "*/*",
+      "Host": "httpbin.demo:8000",
+      "User-Agent": "curl/7.77.0",
+      "X-B3-Sampled": "0",
+      "X-B3-Spanid": "c79b98a968ef9954",
+      "X-B3-Traceid": "281e285c1e9c5f49c79b98a968ef9954"
+    }
+  }
+  {
+    "headers": {
+      "Accept": "*/*",
+      "Host": "httpbin.demo:8000",
+      "User-Agent": "curl/7.77.0",
+      "X-B3-Sampled": "0",
+      "X-B3-Spanid": "685e339a26b0b414",
+      "X-B3-Traceid": "3f32d3f1991e298f685e339a26b0b414"
+    }
+  }
+  ...
 
   # Check canary analysis
   kubectl get canary -n demo
@@ -229,28 +254,13 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
       Weight:  20
   ...
 
-  # Check the connection
-  kubectl exec -it -n demo sleep-854565cb79-2vdrl -c sleep sh
-  while [ 1 ]; do curl http://httpbin.demo:8000/headers;sleep 2s; done
-  {
-    "headers": {
-      "Accept": "*/*",
-      "Host": "httpbin.demo:8000",
-      "User-Agent": "curl/7.77.0",
-      "X-B3-Sampled": "0",
-      "X-B3-Spanid": "c79b98a968ef9954",
-      "X-B3-Traceid": "281e285c1e9c5f49c79b98a968ef9954"
-    }
-  }
-  {
-    "headers": {
-      "Accept": "*/*",
-      "Host": "httpbin.demo:8000",
-      "User-Agent": "curl/7.77.0",
-      "X-B3-Sampled": "0",
-      "X-B3-Spanid": "685e339a26b0b414",
-      "X-B3-Traceid": "3f32d3f1991e298f685e339a26b0b414"
-    }
-  }
+  # Check canary result(refer to the canary release is switching sucessfully)
+  kubectl get canary -n demo
+  NAME                         STATUS      WEIGHT   LASTTRANSITIONTIME
+  canary.flagger.app/httpbin   Succeeded   0        2021-09-07T16:31:31Z
 
+  # Check grafana dashboard for canary
+  kubectl port-forward -n istio-system svc/flagger-grafana 3000:80
+
+  Visit localhost:3000
   ```
