@@ -2,7 +2,11 @@
 
 ![istio-frame](./docs/istio-frame.png)
 ![flux-frame](./docs/flux-frame.png)
-## Init env
+
+## Prerequisite
+https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/README.md#setup-istio-in-docker-desktop
+
+## GitOps deployment via Flux
 
 - [Flux](https://fluxcd.io/docs/components/source/)
 
@@ -64,7 +68,7 @@
   # Check all resources in demo namespace
   kubectl get all -n demo
   NAME                           READY   STATUS    RESTARTS   AGE
-  pod/httpbin-74fb669cc6-8kbzh   1/1     Running   0          9m1s
+  pod/httpbin-74fb669cc6-8kbzh   2/2     Running   0          9m1s
   pod/sleep-854565cb79-2vdrl     1/1     Running   0          53m
 
   NAME              TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
@@ -84,4 +88,85 @@
   {
     "origin": "10.1.1.71"
   }
+
+  ```
+
+## Canary release via Flagger
+
+![canary-process](./docs/canary-process.png)
+![flagger-process](./docs/flagger-process.png)
+
+- Flagger
+
+  ```
+  # Install flagger CRD
+  kubectl apply -f flagger/crd.yaml
+
+  # Check flagger CRD
+  kubectl get crd | grep flagger
+
+  # Add Flagger helm repo
+  helm repo add flagger https://flagger.app
+
+  # Deploy flagger with istio
+  helm upgrade -i flagger flagger/flagger \
+    --namespace=istio-system \
+    --set crd.create=false \
+    --set meshProvider=istio \
+    --set metricsServer=http://prometheus.istio-system:9090
+
+  # Create a test Slack workspace and Flagger APP for webhook
+  https://api.slack.com/messaging/webhooks
+
+  # Add slack webhook for flagger
+  helm upgrade -i flagger flagger/flagger \
+    --namespace=istio-system \
+    --set crd.create=false \
+    --set slack.url=https://hooks.slack.com/services/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 \
+    --set slack.channel=istio-demo \
+    --set slack.user=Flagger
+
+  # Add grafana for flagger dashboard
+  helm upgrade -i flagger-grafana flagger/grafana \
+    --namespace=istio-system \
+    --set url=http://prometheus.istio-system:9090 \
+    --set user=admin \
+    --set password=admin
+
+  # Check the outcome
+  kubectl get pods -n istio-system
+  NAME                                    READY   STATUS    RESTARTS   AGE
+  flagger-6d6fcd75cc-wvktw                1/1     Running   0          4m54s
+  flagger-grafana-77b8c8df65-9gbkh        1/1     Running   0          83s
+  grafana-5b865d9cfb-vz2tn                1/1     Running   0          2d23h
+  istio-egressgateway-5dcd5999f4-qffwh    1/1     Running   0          2d23h
+  istio-ingressgateway-7d754985d5-dcgwx   1/1     Running   0          2d23h
+  istiod-66755bc76c-ksgjq                 1/1     Running   0          2d23h
+  jaeger-99b4cd9bb-bs8tz                  1/1     Running   0          2d23h
+  kiali-6f5f6d4bbd-fptkf                  1/1     Running   0          2d23h
+  prometheus-5b96c5d456-mw957             3/3     Running   0          2d23h
+
+  # Create istio ingress gateway
+  kubectl apply -f flagger/istio-gateway.yaml
+
+  # Deploy flagger loadtester in demo namespace
+  https://github.com/fluxcd/flagger/tree/main/kustomize/tester
+
+  kubectl apply -f flagger/tester-deployment.yaml -n demo
+  kubectl apply -f flagger/tester-svc.yaml -n demo
+
+  # Create hpa for httpbin
+  kubectl apply -f flagger/hpa.yaml
+
+  # Create canary analysis
+  kubectl apply -f flagger/canary.yaml
+
+  # Check canary analysis
+  kubectl get canary -n demo
+  NAME      STATUS         WEIGHT   LASTTRANSITIONTIME
+  httpbin   Initializing   0        2021-09-07T14:21:52Z
+
+  # Check all resources that canary done for demo
+  kubectl get all -n demo
+
   ```
