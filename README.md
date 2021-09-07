@@ -168,5 +168,60 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
 
   # Check all resources that canary done for demo
   kubectl get all -n demo
+  NAME                                      READY   STATUS    RESTARTS   AGE
+  pod/flagger-loadtester-57856ccd69-6bzk9   1/1     Running   0          32m
+  pod/httpbin-primary-fcbdd7f6b-4ffz2       2/2     Running   0          52s
+  pod/httpbin-primary-fcbdd7f6b-qmchh       2/2     Running   0          8m22s
+  pod/sleep-854565cb79-2vdrl                1/1     Running   0          2d10h
 
+  NAME                         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+  service/flagger-loadtester   ClusterIP   10.104.130.51    <none>        80/TCP     32m
+  service/httpbin              ClusterIP   10.101.24.23     <none>        8000/TCP   2d10h
+  service/httpbin-canary       ClusterIP   10.102.6.228     <none>        8000/TCP   8m22s
+  service/httpbin-primary      ClusterIP   10.107.153.184   <none>        8000/TCP   8m22s
+  service/sleep                ClusterIP   10.111.29.70     <none>        80/TCP     2d10h
+
+  NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+  deployment.apps/flagger-loadtester   1/1     1            1           32m
+  deployment.apps/httpbin              0/0     0            0           2d10h
+  deployment.apps/httpbin-primary      2/2     2            2           8m22s
+  deployment.apps/sleep                1/1     1            1           2d10h
+
+  NAME                                            DESIRED   CURRENT   READY   AGE
+  replicaset.apps/flagger-loadtester-57856ccd69   1         1         1       32m
+  replicaset.apps/httpbin-74fb669cc6              0         0         0       2d10h
+  replicaset.apps/httpbin-primary-fcbdd7f6b       2         2         2       8m22s
+  replicaset.apps/sleep-854565cb79                1         1         1       2d10h
+
+  NAME                                                  REFERENCE                    TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+  horizontalpodautoscaler.autoscaling/httpbin           Deployment/httpbin           <unknown>/99%   2         4         0          2m20s
+  horizontalpodautoscaler.autoscaling/httpbin-primary   Deployment/httpbin-primary   <unknown>/99%   2         4         1          112s
+
+  NAME                         STATUS        WEIGHT   LASTTRANSITIONTIME
+  canary.flagger.app/httpbin   Initialized   0        2021-09-07T14:48:38Z
+
+  # Release httpbin test version for canary deployment
+  Change the httpbin image version to test and commit the change for flux deployment
+
+  # Check canary events
+  kubectl describe canary -n demo
+  Events:
+  Type     Reason  Age                   From     Message
+  ----     ------  ----                  ----     -------
+  Normal   Synced  113s (x2 over 20m)  flagger  New revision detected! Scaling up httpbin.demo
+  Warning  Synced  83s                 flagger  canary deployment httpbin.demo not ready: waiting for rollout to finish: 1 old replicas are pending termination
+  Normal   Synced  53s (x2 over 19m)   flagger  Starting canary analysis for httpbin.demo
+
+  # Check if virtual service starting switching traffic
+  kubectl describe vs httpbin -n demo
+  ...
+    Http:
+    Route:
+      Destination:
+        Host:  httpbin-primary
+      Weight:  80
+      Destination:
+        Host:  httpbin-canary
+      Weight:  20
+  ...
   ```
