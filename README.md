@@ -158,6 +158,9 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   # Create hpa for httpbin
   kubectl apply -f flagger/hpa.yaml
 
+  # Create latency metric for prometheus
+  kubectl apply -f flagger/latency-template.yaml
+
   # Create canary analysis
   kubectl apply -f flagger/canary.yaml
 
