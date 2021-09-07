@@ -201,7 +201,7 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   canary.flagger.app/httpbin   Initialized   0        2021-09-07T14:48:38Z
 
   # Release httpbin test version for canary deployment
-  Change the httpbin image version to test and commit the change for flux deployment
+  Change the httpbin image version to test in `demo/httpbin.yaml` and commit the change for flux deployment
 
   # Check canary events
   kubectl describe canary -n demo
@@ -211,6 +211,7 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   Normal   Synced  113s (x2 over 20m)  flagger  New revision detected! Scaling up httpbin.demo
   Warning  Synced  83s                 flagger  canary deployment httpbin.demo not ready: waiting for rollout to finish: 1 old replicas are pending termination
   Normal   Synced  53s (x2 over 19m)   flagger  Starting canary analysis for httpbin.demo
+  Normal   Synced  106s (x4 over 37m)   flagger  Advance httpbin.demo canary weight 20
 
   # Check if virtual service starting switching traffic
   kubectl describe vs httpbin -n demo
@@ -224,4 +225,29 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
         Host:  httpbin-canary
       Weight:  20
   ...
+
+  # Check the connection
+  kubectl exec -it -n demo sleep-854565cb79-2vdrl -c sleep sh
+  while [ 1 ]; do curl http://httpbin.demo:8000/headers;sleep 2s; done
+  {
+    "headers": {
+      "Accept": "*/*",
+      "Host": "httpbin.demo:8000",
+      "User-Agent": "curl/7.77.0",
+      "X-B3-Sampled": "0",
+      "X-B3-Spanid": "c79b98a968ef9954",
+      "X-B3-Traceid": "281e285c1e9c5f49c79b98a968ef9954"
+    }
+  }
+  {
+    "headers": {
+      "Accept": "*/*",
+      "Host": "httpbin.demo:8000",
+      "User-Agent": "curl/7.77.0",
+      "X-B3-Sampled": "0",
+      "X-B3-Spanid": "685e339a26b0b414",
+      "X-B3-Traceid": "3f32d3f1991e298f685e339a26b0b414"
+    }
+  }
+
   ```
