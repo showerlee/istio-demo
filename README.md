@@ -122,7 +122,7 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   helm upgrade -i flagger flagger/flagger \
     --namespace=istio-system \
     --set crd.create=false \
-    --set slack.url=https://hooks.slack.com/services/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 \
+    --set slack.url=https://hooks.slack.com/services/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 \
     --set slack.channel=istio-demo \
     --set slack.user=Flagger
 
