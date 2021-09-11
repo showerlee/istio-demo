@@ -41,6 +41,9 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   gcmsg "Add demo manifests"
   gp
 
+  # Inject side car for namespace demo
+  kubectl label namespace default istio-injection=enabled --overwrite=true
+
   # Export the manifest of demo source git for flux
   flux create source git demo \
     --url=https://github.com/showerlee/istio-demo \
