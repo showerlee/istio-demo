@@ -270,3 +270,18 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
 
   Visit localhost:3000
   ```
+
+
+## Improve the flexibility of the system
+
+![flexibility-process](./docs/flexibility-process.png)
+
+```
+# Get virtualservice
+kubectl get virtualservice -n demo
+NAME      GATEWAYS                                    HOSTS                               AGE
+httpbin   ["public-gateway.demo.svc.cluster.local"]   ["httpbin.example.com"]             134m
+
+Visit httpbin.example.com should display a httpbin demo frontend
+
+```
