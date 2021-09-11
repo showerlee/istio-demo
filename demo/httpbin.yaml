@@ -38,8 +38,8 @@ spec:
     spec:
       serviceAccountName: httpbin
       containers:
-      - image: docker.io/kennethreitz/httpbin # The base version
-      # - image: docker.io/kennethreitz/httpbin:test # The version for canary release
+      # - image: docker.io/kennethreitz/httpbin # The base version
+      - image: docker.io/kennethreitz/httpbin:test # The version for canary release
         imagePullPolicy: IfNotPresent
         name: httpbin
         ports:
