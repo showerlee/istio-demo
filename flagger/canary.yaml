@@ -25,6 +25,8 @@ spec:
     # Istio gateways (optional)
     gateways:
     - public-gateway.demo.svc.cluster.local
+    hosts:
+    - httpbin.example.com
   analysis:
     # schedule interval (default 60s)
     interval: 30s

@@ -164,6 +164,9 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   # Create latency metric for prometheus
   kubectl apply -f flagger/latency-template.yaml
 
+  # Add host in local
+  sudo echo "127.0.0.1 httpbin.example.com" /etc/hosts
+
   # Create canary analysis
   kubectl apply -f flagger/canary.yaml
 
