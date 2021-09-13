@@ -326,3 +326,47 @@ cluster.outbound|8000||httpbin.demo.svc.cluster.local.upstream_rq_pending_total:
 
 It gives the report that upstream_rq_pending_overflow is 16
 ```
+
+## Setup secure policy
+
+![auth-frame](./docs/auth-frame.png)
+
+```
+# Apply default policy(implicitly deny everything)
+kubectl apply -f istio/ap-default.yaml
+
+# Check whether request is deny
+kubectl exec -it -n demo sleep-65c4679954-b955q -c sleep -- curl http://httpbin.demo:8000/get
+RBAC: access denied
+
+# Apply the policy where source namespace is demo
+kubectl apply -f istio/ap-ns-demo.yaml
+
+# Check if the accessiability is allowable where source namespace is demo and serviceaccount is sleep
+kubectl exec -it -n demo sleep-65c4679954-b955q -c sleep -- curl http://httpbin.demo:8000/get
+{"args":{},"headers":{"Accept":"*/*","Host":"httpbin.demo:8000","User-Agent":"curl/7.77.0","X-B3-Parentspanid":"e76a692f21e8c12e","X-B3-Sampled":"1","X-B3-Spanid":"a09b92f9128c4da3","X-B3-Traceid":"b804435ac4f79773e76a692f21e8c12e","X-Envoy-Attempt-Count":"1","X-Forwarded-Client-Cert":"By=spiffe://cluster.local/ns/demo/sa/httpbin;Hash=709cb97c88a409eee19553dc269d44849a4c31a59fb9114368b7f391fed95357;Subject=\"\";URI=spiffe://cluster.local/ns/demo/sa/sleep"},"origin":"127.0.0.6","url":"http://httpbin.demo:8000/get"}
+
+kubectl exec -it sleep-854565cb79-5kczn -c sleep -- curl http://httpbin.demo:8000/get
+RBAC: access denied%
+
+# Apply the policy where source namespace is demo and destination operation is GET
+kubectl apply -f istio/ap-ns-demo-get.yaml
+
+# Check if the accessiability is allowable where source namespace is demo and serviceaccount is sleep and destination operation is GET
+kubectl exec -it -n demo sleep-65c4679954-b955q -c sleep -- curl http://httpbin.demo:8000/get
+{"args":{},"headers":{"Accept":"*/*","Host":"httpbin.demo:8000","User-Agent":"curl/7.77.0","X-B3-Parentspanid":"d97f06ddbe825330","X-B3-Sampled":"1","X-B3-Spanid":"e3aaefd18964854a","X-B3-Traceid":"2d0be3e03d5129f8d97f06ddbe825330","X-Envoy-Attempt-Count":"1","X-Forwarded-Client-Cert":"By=spiffe://cluster.local/ns/demo/sa/httpbin;Hash=709cb97c88a409eee19553dc269d44849a4c31a59fb9114368b7f391fed95357;Subject=\"\";URI=spiffe://cluster.local/ns/demo/sa/sleep"},"origin":"127.0.0.6","url":"http://httpbin.demo:8000/get"}
+
+kubectl exec -it -n demo sleep-65c4679954-b955q -c sleep -- curl http://httpbin.demo:8000/headers
+RBAC: access denied%
+
+# Apply the policy where source namespace is demo and destination operation is GET and have proper headers
+kubectl apply -f istio/ap-ns-demo-get-hds.yaml
+
+# Check if the accessiability is allowable where source namespace is demo and serviceaccount is sleep and destination operation is GET and request.headers contains test string
+kubectl exec -it -n demo sleep-65c4679954-b955q -c sleep -- curl http://httpbin.demo:8000/get
+RBAC: access denied%
+
+kubectl exec -it -n demo sleep-65c4679954-b955q -c sleep -- curl http://httpbin.demo:8000/get -H x-rfma-token:test1
+{"args":{},"headers":{"Accept":"*/*","Host":"httpbin.demo:8000","User-Agent":"curl/7.77.0","X-B3-Parentspanid":"8a1b87146fc7c68e","X-B3-Sampled":"1","X-B3-Spanid":"8d68039464aef8d9","X-B3-Traceid":"2c0d9693b50fdf048a1b87146fc7c68e","X-Envoy-Attempt-Count":"1","X-Forwarded-Client-Cert":"By=spiffe://cluster.local/ns/demo/sa/httpbin;Hash=709cb97c88a409eee19553dc269d44849a4c31a59fb9114368b7f391fed95357;Subject=\"\";URI=spiffe://cluster.local/ns/demo/sa/sleep","X-Rfma-Token":"test1"},"origin":"127.0.0.6","url":"http://httpbin.demo:8000/get"}
+
+```

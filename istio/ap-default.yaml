@@ -1,0 +1,13 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: httpbin-demo
+  namespace: demo
+spec:
+  # action: DENY
+  # rules:
+  # - {}
+  selector:
+    matchLabels:
+      version: v1
+# No rule means implicitly deny, exactly same as what commented above.

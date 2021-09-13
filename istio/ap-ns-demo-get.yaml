@@ -1,0 +1,17 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: httpbin-demo
+  namespace: demo
+spec:
+  action: ALLOW
+  rules:
+  - from:
+      - source:
+          principals: ["cluster.local/ns/demo/sa/sleep"]
+      - source:
+          namespaces: ["demo"]
+    to:
+      - operation:
+          methods: ["GET"]
+          paths: ["/get"]
