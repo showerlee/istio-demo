@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: httpbin-demo
+  namespace: demo
+spec:
+  hosts:
+  - "httpbin.demo.example.com"
+  gateways:
+  - httpbin-demo-gateway
+  http:
+  - route:
+    - destination:
+        host: httpbin
+        port:
+          number: 8000

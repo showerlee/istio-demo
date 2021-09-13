@@ -284,4 +284,45 @@ httpbin   ["public-gateway.demo.svc.cluster.local"]   ["httpbin.example.com"]   
 
 Visit httpbin.example.com should display a httpbin demo frontend
 
+# Create a new gateway for demo
+kubectl apply -f istio/gateway.yaml
+
+# Create a virtualservice for 1s timeout
+kubectl apply -f istio/vs-timeout.yaml
+
+# Simulate 2s delay for httpbin to expect a request timeout where the timeout threshold is 1s
+curl http://httpbin.demo.example.com/delay/2
+upstream request timeout%
+
+# Create a VS for retry
+kubectl apply -f istio/vs-retry.yaml
+
+# Simulate a 500 request for httpbin to expect a retry action from logs
+curl http://httpbin.demo.example.com/status/500
+
+# Check `istio-proxy` container in httpbin whether a retry is triggered
+kubectl logs -n demo httpbin-primary-77b74656cf-gzh7j -c istio-proxy -f
+
+# Simulate a Circuit breaking for httpbin
+kubectl apply -f istio/cb.yaml
+
+# Setup loadtest via `fortio`
+kubectl apply -f istio/fortio-deploy.yaml
+FORTIO_POD=$(kubectl get pod -n demo | grep fortio | awk '{print $1}')
+
+# Request 3 concurrencies and 30 times
+kubectl exec -it -n demo "$FORTIO_POD" -c fortio -- /usr/bin/fortio load -c 3 -qps 0 -n 30 -loglevel Warning http://httpbin.demo:8000/get
+...
+Code 200 : 14 (46.7 %)
+Code 503 : 16 (53.3 %)
+...
+It implies 16(53.3% of) requests in 3 concurrencies and 30 times is blocked by Circuit breaking
+
+# Check the fortio report
+kubectl exec -n demo $FORTIO_POD -c istio-proxy -- pilot-agent request GET stats | grep httpbin.demo | grep pending
+...
+cluster.outbound|8000||httpbin.demo.svc.cluster.local.upstream_rq_pending_overflow: 16
+cluster.outbound|8000||httpbin.demo.svc.cluster.local.upstream_rq_pending_total: 14
+
+It gives the report that upstream_rq_pending_overflow is 16
 ```
