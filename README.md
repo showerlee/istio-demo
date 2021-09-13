@@ -1,12 +1,47 @@
 # istio-demo
+A simple demo that helps you build micro service via istio framework in k8s.
 
-![istio-frame](./docs/istio-frame.png)
+## Context
+
+### What is istio?
+
+It is a completely open source service mesh that is connected to existing distributed applications as a transparent layer.
+
+It is also a platform that can be integrated with any logging, telemetry and policy system. Istio's diverse features allow you to successfully and efficiently run a microservice architecture, and provide a unified method for protecting, connecting, and monitoring microservices.
+
+![istio-architect](./docs/istio-architect.png)
+
+### Why we choose istio?
+
+- Traffic management
+- Observability
+- Security capabilities
+
+More details: https://istio.io/latest/docs/
+
+## How it works
+
+We will create the following micrio services via GitOps to demonstrate how to achieve the traffic management, observability and security capabilities in `Istio Mesh`
+
+![demo-frame](./docs/demo-frame.png)
+
+- `Gateway` is a network ingress receives any vaild inbound traffic and forwards to internal services.
+
+- [Httpbin](https://httpbin.org/) is a simple HTTP Request & Response Service.
+
+- `Sleep` is a client that initiates a internal network request.
+
+- `External` means any outbound traffic going outside `Istio Mesh`
+
+### Prerequisite
+
+[Setup-istio-in-docker-desktop](https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/README.md#setup-istio-in-docker-desktop)
+
+### GitOps deployment via Flux
+
+[Flux](https://fluxcd.io/docs/) helps you deploy istio resources via [GitOps](https://www.gitops.tech/#what-is-gitops) without any manual execution.
+
 ![flux-frame](./docs/flux-frame.png)
-
-## Prerequisite
-https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/README.md#setup-istio-in-docker-desktop
-
-## GitOps deployment via Flux
 
 - [Flux](https://fluxcd.io/docs/components/source/)
 
@@ -37,9 +72,9 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   kubectl create ns demo
 
   # Commit demo manifests into repo so that flux could manage the deployment.
-  gaa
+  git add demo/
   gcmsg "Add demo manifests"
-  gp
+  git push
 
   # Inject side car for namespace demo
   kubectl label namespace demo istio-injection=enabled --overwrite=true
@@ -94,7 +129,7 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
 
   ```
 
-## Canary release via Flagger
+### Canary release via Flagger
 
 ![canary-process](./docs/canary-process.png)
 ![flagger-process](./docs/flagger-process.png)
@@ -272,7 +307,7 @@ https://github.com/showerlee/k8s_tutorial/blob/master/manifests/istio/istioctl/R
   ```
 
 
-## Improve the flexibility of the system
+### Improve the flexibility of the system
 
 ![flexibility-process](./docs/flexibility-process.png)
 
@@ -327,7 +362,7 @@ cluster.outbound|8000||httpbin.demo.svc.cluster.local.upstream_rq_pending_total:
 It gives the report that upstream_rq_pending_overflow is 16
 ```
 
-## Setup secure policy
+### Setup secure policy
 
 ![auth-frame](./docs/auth-frame.png)
 
