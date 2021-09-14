@@ -405,3 +405,19 @@ kubectl exec -it -n demo sleep-65c4679954-b955q -c sleep -- curl http://httpbin.
 {"args":{},"headers":{"Accept":"*/*","Host":"httpbin.demo:8000","User-Agent":"curl/7.77.0","X-B3-Parentspanid":"8a1b87146fc7c68e","X-B3-Sampled":"1","X-B3-Spanid":"8d68039464aef8d9","X-B3-Traceid":"2c0d9693b50fdf048a1b87146fc7c68e","X-Envoy-Attempt-Count":"1","X-Forwarded-Client-Cert":"By=spiffe://cluster.local/ns/demo/sa/httpbin;Hash=709cb97c88a409eee19553dc269d44849a4c31a59fb9114368b7f391fed95357;Subject=\"\";URI=spiffe://cluster.local/ns/demo/sa/sleep","X-Rfma-Token":"test1"},"origin":"127.0.0.6","url":"http://httpbin.demo:8000/get"}
 
 ```
+
+### Collect metrics and monitor applications
+
+```
+# Visit prometheus
+istioctl d prometheus
+
+# Check envoy interface is workable
+kubectl exec -it -n demo sleep-596dd95b6d-478sx -c sleep -- curl http://httpbin.demo:15090/stats/prometheus
+...
+envoy_cluster_assignment_stale{cluster_name="xds-grpc"} 0
+...
+
+# Visit grafana
+istioctl d grafana
+```
