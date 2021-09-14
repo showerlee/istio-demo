@@ -421,3 +421,24 @@ envoy_cluster_assignment_stale{cluster_name="xds-grpc"} 0
 # Visit grafana
 istioctl d grafana
 ```
+
+### Logging via ELK
+
+![logging](./docs/logging.png)
+
+```
+# Create a new namespace for elk
+kubectl create ns elk
+
+# Setup ELK
+kubectl apply -f elk/
+
+# Check filebeat logs for validation
+kubectl logs -n elk filebeat-8646b847b7-vzp42
+...
+2021-09-14T08:02:20.179Z	INFO	log/harvester.go:251	Harvester started for file: /var/log/containers/httpbin-5f54b6d56f-pf5m2_demo_httpbin-5f5d90d59e826546d3c7f61a7adbdbc3f3eaccc08e7c047d1f92bde7e8af043c.log
+...
+
+# Setup log index in kibana
+
+```
