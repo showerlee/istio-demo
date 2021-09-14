@@ -442,3 +442,86 @@ kubectl logs -n elk filebeat-8646b847b7-vzp42
 # Setup log index in kibana
 
 ```
+
+### Integrate distributed tracing tool
+
+We use cloud native tool `jaeger` to integrate distributed tracing toll with istio.
+You can choose `SkyWalking` and `DataDog` for the alternative.
+
+```
+# Setup Jaeger crd
+kubectl apply -f jaeger/jaegertracing.io_jaegers_crd.yaml
+
+# Create namespace
+kubectl create ns observability
+
+# Install operator
+kubectl create -n observability -f jaeger/service_account.yaml
+kubectl create -n observability -f jaeger/role.yaml
+kubectl create -n observability -f jaeger/role_binding.yaml
+kubectl create -n observability -f jaeger/operator.yaml
+
+# Install cluster role
+kubectl create -n observability -f jaeger/cluster_role.yaml
+kubectl create -n observability -f jaeger/cluster_role_binding.yaml
+
+# Apply jaeger
+kubectl apply -f jaeger/simplest.yaml -n observability
+
+# Get all resources in observability
+kubectl get all -n observability
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/jaeger-operator-865868754b-bfpsv   1/1     Running   0          55m
+pod/simplest-5675c68699-bfjn7          1/1     Running   0          111s
+
+NAME                                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                                  AGE
+service/jaeger-operator-metrics       ClusterIP   10.104.174.207   <none>        8383/TCP,8686/TCP                        54m
+service/simplest-agent                ClusterIP   None             <none>        5775/UDP,5778/TCP,6831/UDP,6832/UDP      111s
+service/simplest-collector            ClusterIP   10.103.221.89    <none>        9411/TCP,14250/TCP,14267/TCP,14268/TCP   111s
+service/simplest-collector-headless   ClusterIP   None             <none>        9411/TCP,14250/TCP,14267/TCP,14268/TCP   111s
+service/simplest-query                ClusterIP   10.107.13.208    <none>        16686/TCP,16685/TCP                      111s
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/jaeger-operator   1/1     1            1           55m
+deployment.apps/simplest          1/1     1            1           111s
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/jaeger-operator-865868754b   1         1         1       55m
+replicaset.apps/simplest-5675c68699          1         1         1       111s
+
+# Integrate istio
+istioctl manifest generate \
+--set meshConfig.outboundTrafficPolicy.mode=REGISTRY_ONLY \
+--set meshConfig.accessLogFile=/dev/stdout \
+--set meshConfig.accessLogEncoding=JSON \
+--set meshConfig.enableTracing=true \
+--set meshConfig.defaultConfig.tracing.zipkin.address=simplest-collector.observability:9411 \
+--set meshConfig.defaultConfig.tracing.sampling=100 \
+> ./jaeger/generated-manifest.yaml
+kubectl apply -f ./jaeger/generated-manifest.yaml
+
+# Deploy bookinfo with istio and jaeger
+kubectl apply -f jaeger/bookinfo.yaml
+kubectl apply -f jaeger/bookinfo-gateway.yaml
+kubectl label namespace default istio-injection=enabled --overwrite=true
+kubectl -n default rollout restart deploy
+
+# Check if productpage-v1 has three containers(since we injected jaeger in bookinfo manifest)
+kubectl get pods
+NAME                             READY   STATUS    RESTARTS   AGE
+details-v1-794898d6c4-fsvk7      2/2     Running   0          11m
+productpage-v1-89dc8876b-j92t5   3/3     Running   0          7m54s
+ratings-v1-65bd969546-9szjp      2/2     Running   0          11m
+reviews-v1-c769cb8bb-jvrfz       2/2     Running   0          11m
+reviews-v2-5d56cb44bb-2p27g      2/2     Running   0          11m
+reviews-v3-78cdd975cd-fv8s4      2/2     Running   0          11m
+sleep-bf945dc74-m224z            2/2     Running   0          11m
+
+# Forward query dashboard to local
+kubectl port-forward svc/simplest-query -n observability 16686:16686
+```
+Visit http://localhost/productpage to produce more traffic for bookinfo.
+
+Visit localhost:16686 to check if jaeger collects any tracing.
+
+![jaeger-productpage](./docs/jaeger-productpage.png)
