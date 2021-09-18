@@ -625,3 +625,22 @@ istioctl d envoy productpage-v1-89dc8876b-j92t5
 # Change logging level to debug
 curl -X POST http://localhost:15000/logging\?level\=debug
 ```
+
+### Summary
+
+- Use `%RESPONSE_FLAGES%` in the logs to determin what issue actually is.
+
+![logging-flag](./docs/logging-flag.png)
+
+- Bind upstream and downstream info via `request id`
+
+- Analyze Envoy log info
+
+- Check whether the route policy is not taken into effect
+
+  - Check the naming convention is valid
+  - Check whether the default istio port is conflict
+  - Check setting sync info via `istioctl proxy-status`
+  - Use `Kiali` for config validation
+
+- Check performance issue via `controlZ`, `pilot debug`, `Envoy admin API`
