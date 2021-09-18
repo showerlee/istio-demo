@@ -525,3 +525,103 @@ Visit http://localhost/productpage to produce more traffic for bookinfo.
 Visit localhost:16686 to check if jaeger collects any tracing.
 
 ![jaeger-productpage](./docs/jaeger-productpage.png)
+
+## Troubleshooting
+
+Since it is an open source project and doesn't have any paid service for any emergency assistance. We need to find ways to rescue ourselves if no one could help.
+
+Here is a few checklist:
+
+### Istio CLI
+
+```
+# Verify env before installation
+istioctl verify-install
+
+# Manifest operation
+istioctl manifest [apply/diff/generate/migrate/versions]
+
+# Profile operation
+istioctl profile [list/diff/dump]
+
+# Inject istio-proxy sidecar
+istioctl kube-inject
+
+# Port forward dashboard in local and open
+istioctl dashboard [controlz/envoy/Grafana/jaeger/kiali/Prometheus/zipkin]
+
+# Proxy sync status check
+istioctl ps
+
+# Retrieve information about proxy configuration from an Envoy instance.
+istioctl proxy-config <clusters|listeners|routes|endpoints|bootstrap|log|secret> <pod-name[.namespace]>
+Example:
+istioctl pc cluster productpage-v1-89dc8876b-j92t5
+
+# Check all the details for pod embed istio
+istioctl x describe pod httpbin-primary-6cb7cd85f8-7b9xp -n demo
+Pod: httpbin-primary-6cb7cd85f8-7b9xp
+   Pod Ports: 80 (httpbin), 15090 (istio-proxy)
+--------------------
+Service: httpbin
+   Port: http 8000/HTTP targets pod port 80
+DestinationRule: httpbin for "httpbin"
+   connection pool/outlier detection
+--------------------
+Service: httpbin-primary
+   Port: http 8000/HTTP targets pod port 80
+DestinationRule: httpbin-primary for "httpbin-primary"
+   No Traffic Policy
+
+
+Exposed on Ingress Gateway http://
+VirtualService: httpbin-demo
+   1 HTTP route(s)
+--------------------
+
+Exposed on Ingress Gateway http://
+VirtualService: httpbin
+   Weight 100%
+
+# Analyze istioctl regulations
+istioctl analyze --all-namespaces
+...
+
+istioctl analyze a.yaml b.yaml target-dir/
+
+istioctl analyze --use-kube=false a.yaml
+
+```
+
+### ControlZ tool
+
+Self inspection for pilotd
+
+- Adjust log output standard
+
+- Check memory usage
+
+- Env variable
+
+- Process info
+
+```
+istioctl d controlz <istiod-podname> -n istio-system
+
+istioctl d controlz istiod-5dcf5645b8-pq6w9 -n istio-system
+```
+
+![istio-controlz](./docs/istio-controlz.png)
+
+### Envoy admin
+
+```
+istioctl d envoy <pod-name>.<namespace>
+OR
+kubectl port-forward pod-name xxx:15000
+
+istioctl d envoy productpage-v1-89dc8876b-j92t5
+
+# Change logging level to debug
+curl -X POST http://localhost:15000/logging\?level\=debug
+```
