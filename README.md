@@ -3,6 +3,35 @@ A simple demo that helps you build micro service via istio framework in k8s.
 
 ## Context
 
+### What is service mesh?
+
+A service mesh is a dedicated infrastructure layer for handling service-to-service communication. It’s responsible for the reliable delivery of requests through the complex topology of services that comprise a modern, cloud native application. In practice, the service mesh is typically implemented as an array of lightweight network proxies that are deployed alongside application code, without the application needing to be aware
+
+![service-mesh](./docs/service-mesh.png)
+
+### Feature
+
+- Traffic control
+  - Routing
+  - Traffic transfer
+  - Timeout retry
+  - Circuit breaking
+  - Fault injection
+  - Traffic mirroring
+
+- Policy
+  - Traffic limit
+  - Black/white list
+
+- Network security
+  - Authentication
+  - Authorization
+
+- Observability
+  - Indicator collection and display
+  - Logging collection
+  - Distributed tracing
+
 ### What is istio?
 
 It is a completely open source service mesh that is connected to existing distributed applications as a transparent layer.
